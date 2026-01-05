@@ -1,0 +1,54 @@
+# ============================================
+# Reddit → X Automation - Docker Compose
+# Coolify ile deploy için
+# ============================================
+
+version: '3.8'
+
+services:
+  reddit-x-bot:
+    build: .
+    container_name: reddit-x-bot
+    restart: unless-stopped
+    
+    # Environment variables (.env dosyasından)
+    env_file:
+      - .env
+    
+    # Veya direkt tanımla:
+    # environment:
+    #   - X_API_KEY=${X_API_KEY}
+    #   - X_API_SECRET=${X_API_SECRET}
+    #   - X_ACCESS_TOKEN=${X_ACCESS_TOKEN}
+    #   - X_ACCESS_TOKEN_SECRET=${X_ACCESS_TOKEN_SECRET}
+    #   - X_BEARER_TOKEN=${X_BEARER_TOKEN}
+    #   - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    #   - TIMEZONE=Europe/Istanbul
+    #   - DRY_RUN=false
+    
+    # Persistent volumes
+    volumes:
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+      - ./data:/app/data
+    
+    # Timezone
+    environment:
+      - TZ=Europe/Istanbul
+    
+    # Varsayılan: scheduler modu
+    command: scheduler
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "from config import config; print('OK')"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# Volume tanımları (opsiyonel - named volumes için)
+# volumes:
+#   bot-logs:
+#   bot-cache:
+#   bot-data:
