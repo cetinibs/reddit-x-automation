@@ -28,11 +28,6 @@ class OpenAIConfig(BaseModel):
 
 class RedditConfig(BaseModel):
     """Reddit scraping configuration"""
-    # Reddit API credentials (for PRAW)
-    client_id: str = os.getenv("REDDIT_CLIENT_ID", "")
-    client_secret: str = os.getenv("REDDIT_CLIENT_SECRET", "")
-    user_agent: str = os.getenv("REDDIT_USER_AGENT", "RedditXBot/1.0 by u/YourUsername")
-    
     posts_limit: int = int(os.getenv("REDDIT_POSTS_LIMIT", "25"))
     min_upvotes: int = int(os.getenv("MIN_UPVOTES", "100"))
     cache_hours: int = int(os.getenv("CACHE_HOURS", "6"))
