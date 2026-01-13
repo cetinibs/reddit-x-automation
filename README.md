@@ -1,191 +1,230 @@
-# 🤖 Reddit → X (Twitter) AI Otomasyon Sistemi
+# 🌀 Reddit → X (Twitter) Hurricane Otomasyon Sistemi
 
 ## 📋 Genel Bakış
 
-Bu sistem:
-- Reddit'teki popüler konuları otomatik tarar
-- AI ile Türkçe ve İngilizce tweet'ler oluşturur
-- Belirlenen saatlerde X'te paylaşır
-- Tamamen otomatik çalışır
+Bu sistem **Hurricane Notları** stratejisine göre optimize edilmiştir:
+
+- **%90 Engagement**: Büyük hesaplara quote/mention yaparak trustscore aktarımı
+- **%10 Orijinal Post**: Reddit'ten viral içerik
+- **24 Saat Kuralı**: Sessizlik = negatif boost
+- **Duygusal Tetikleyiciler**: Para, statü, beğenilme, kabul görme
 
 ## 🏗️ Sistem Mimarisi
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Reddit    │────▶│  Python     │────▶│  Claude/    │────▶│   X API     │
-│   .json API │     │  Scraper    │     │  OpenAI     │     │   Post      │
+│   Reddit    │────▶│  Python     │────▶│  OpenAI     │────▶│   X API     │
+│   .json API │     │  Scraper    │     │  GPT-4o     │     │   Post      │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
                            │
                            ▼
                     ┌─────────────┐
-                    │   Cron      │
-                    │   Scheduler │
+                    │  Hurricane  │
+                    │  Scheduler  │
                     └─────────────┘
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+        ┌──────────┐ ┌──────────┐ ┌──────────┐
+        │  Quote   │ │  Reply   │ │ Mention  │
+        │  Tweets  │ │  to Big  │ │  Users   │
+        └──────────┘ │ Accounts │ └──────────┘
+                     └──────────┘
 ```
 
 ## 📁 Dosya Yapısı
 
 ```
 reddit-x-automation/
-├── config.py           # API anahtarları ve ayarlar
+├── config.py           # API anahtarları ve Hurricane ayarları
 ├── reddit_scraper.py   # Reddit veri çekme
-├── tweet_generator.py  # AI ile tweet oluşturma
+├── tweet_generator.py  # AI ile tweet oluşturma (duygusal tetikleyiciler)
 ├── x_poster.py         # X'e paylaşım
-├── main.py             # Ana orkestrasyon
-├── scheduler.py        # Zamanlama
+├── x_engagement.py     # 🌀 Hurricane engagement modülü (YENİ)
+├── main.py             # Ana orkestrasyon + Hurricane komutları
+├── scheduler.py        # Hurricane zamanlama
 ├── requirements.txt    # Bağımlılıklar
 └── .env               # Gizli anahtarlar
 ```
 
 ---
 
-## 🚀 ADIM 1: Gereksinimler
+## 🌀 Hurricane Stratejisi
 
-### 1.1 Sunucu Gereksinimleri
-- Python 3.10+
-- Hetzner Cloud (senin mevcut altyapın) ✅
-- Coolify veya Docker ✅
+### Ana Prensipler
 
-### 1.2 API Anahtarları (Ücretsiz/Düşük Maliyetli)
+1. **%90 Quote/Mention**: Sadece içerik paylaşmak yetmez
+   - Büyük hesapları quote'la
+   - Akıllı reply'lar yaz
+   - Mention ile görünürlük kazan
 
-| Servis | Amaç | Maliyet |
-|--------|------|---------|
-| Reddit | Veri çekme | Ücretsiz (.json endpoint) |
-| Anthropic Claude | Tweet oluşturma | $5 kredi ile başla |
-| X Developer | Tweet paylaşma | Ücretsiz (Basic tier) |
+2. **Trustscore Aktarımı**: Büyük hesaplardan güven puanı al
+   - HP bar 100 olan hesapları hedefle
+   - Quote ve reply ile "juice transfer"
 
----
+3. **24 Saat Kuralı**: 
+   - Son posttan 24 saat geçerse = -%20 negatif boost
+   - Minimum her 23 saatte bir aktivite
 
-## 🔧 ADIM 2: X Developer Hesabı Kurulumu
+4. **Dwell Time**: 
+   - Tartışma yaratan içerik
+   - Okuyucuyu 5+ saniye tutma
 
-### 2.1 Developer Portal'a Kaydol
-1. https://developer.twitter.com adresine git
-2. "Sign up for Free Account" tıkla
-3. Use case olarak "Making a bot" seç
+### Duygusal Tetikleyiciler
 
-### 2.2 App Oluştur
-1. Developer Portal → Projects & Apps → Create App
-2. App ismi: "Reddit Trends Bot" (veya istediğin)
-3. App permissions: **Read and Write** seç
-
-### 2.3 API Anahtarlarını Al
-```
-API Key: xxxxxxxxxxxxxx
-API Secret: xxxxxxxxxxxxxx
-Access Token: xxxxxxxxxxxxxx
-Access Token Secret: xxxxxxxxxxxxxx
-Bearer Token: xxxxxxxxxxxxxx
-```
-
-⚠️ **ÖNEMLİ**: Bu anahtarları güvenli sakla!
+- 💰 **Para**: "Pasif gelir", "para kazanmak"
+- 🏆 **Statü**: "Başarı", "prestij"
+- ❤️ **Beğenilme**: "Tanınmak", "kabul görmek"
+- 🆓 **Özgürlük**: "Bağımsızlık", "kendi işin"
 
 ---
 
-## 🔧 ADIM 3: Claude API Kurulumu
+## 🚀 Hızlı Başlangıç
 
-### 3.1 Anthropic Console
-1. https://console.anthropic.com adresine git
-2. API Keys → Create Key
-3. Anahtarı kopyala
-
-### 3.2 Kredi Yükleme
-- İlk $5 yeterli (binlerce tweet için)
-- Pay as you go model
-
----
-
-## 🔧 ADIM 4: Sunucu Kurulumu
-
-### 4.1 Coolify'da Yeni Servis Oluştur
+### 1. Kurulum
 
 ```bash
-# SSH ile sunucuya bağlan
-ssh root@your-hetzner-ip
+# Repo'yu klonla
+git clone <repo-url>
+cd reddit-x-automation
 
-# Proje klasörü oluştur
-mkdir -p /opt/reddit-x-bot
-cd /opt/reddit-x-bot
+# Virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Bağımlılıklar
+pip install -r requirements.txt
+
+# Environment
+cp .env.example .env
+# .env dosyasını düzenle
 ```
 
-### 4.2 Virtual Environment
+### 2. Hedef Hesapları Ekle
 
 ```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
+# Trustscore aktarımı için büyük hesaplar ekle
+python main.py --add-target elonmusk
+python main.py --add-target levelsio
+python main.py --add-target naval
+python main.py --add-target paulg
+
+# Listeyi görüntüle
+python main.py --list-targets
 ```
 
----
-
-## 📝 ADIM 5: Kod Dosyalarını Oluştur
-
-Aşağıdaki dosyaları sırayla oluştur:
-
-### Dosya Listesi:
-1. `requirements.txt` - Bağımlılıklar
-2. `.env` - Gizli anahtarlar
-3. `config.py` - Yapılandırma
-4. `reddit_scraper.py` - Reddit tarama
-5. `tweet_generator.py` - AI tweet oluşturma
-6. `x_poster.py` - X paylaşım
-7. `main.py` - Ana program
-8. `scheduler.py` - Zamanlayıcı
-
----
-
-## ⏰ ADIM 6: Zamanlama Ayarları
-
-### Önerilen Paylaşım Saatleri
-
-| Saat (TR) | Saat (UTC) | Dil | Hedef Kitle |
-|-----------|------------|-----|-------------|
-| 09:00 | 06:00 | 🇹🇷 Türkçe | Türkiye sabah |
-| 13:00 | 10:00 | 🇹🇷 Türkçe | Türkiye öğle |
-| 17:00 | 14:00 | 🇬🇧 İngilizce | US sabah |
-| 21:00 | 18:00 | 🇬🇧 İngilizce | US öğle |
-
-### Cron Ayarları
+### 3. Test Et
 
 ```bash
-# Crontab düzenle
-crontab -e
+# 24 saat kuralı kontrolü
+python main.py --check-24h
 
-# Şu satırları ekle:
-0 6 * * * /opt/reddit-x-bot/venv/bin/python /opt/reddit-x-bot/main.py --lang tr
-0 10 * * * /opt/reddit-x-bot/venv/bin/python /opt/reddit-x-bot/main.py --lang tr
-0 14 * * * /opt/reddit-x-bot/venv/bin/python /opt/reddit-x-bot/main.py --lang en
-0 18 * * * /opt/reddit-x-bot/venv/bin/python /opt/reddit-x-bot/main.py --lang en
+# İstatistikleri görüntüle
+python main.py --stats
+
+# Dry run (tweet atmadan)
+python main.py --engage --dry-run
+
+# Gerçek engagement
+python main.py --engage --lang tr
+```
+
+### 4. Scheduler Başlat
+
+```bash
+# Hurricane modunda başlat
+python scheduler.py
+
+# Veya Docker ile
+docker-compose up -d
 ```
 
 ---
 
-## 🎯 ADIM 7: Test ve Başlatma
+## 📖 Kullanım Örnekleri
 
-### 7.1 Manuel Test
+### Engagement Modu (Hurricane) - %90
 
 ```bash
-cd /opt/reddit-x-bot
-source venv/bin/activate
+# Otomatik aksiyon seçimi (quote/reply/mention)
+python main.py --engage
 
-# Sadece Reddit tarama testi
-python reddit_scraper.py
+# Belirli dil ile
+python main.py --engage --lang en
 
-# Sadece tweet oluşturma testi
-python tweet_generator.py
+# Dry run
+python main.py --engage --dry-run --verbose
+```
 
-# Tam test (tweet atmadan)
-python main.py --dry-run --lang tr
+### Orijinal Post Modu - %10
 
-# Gerçek paylaşım
+```bash
+# Reddit'ten tweet
 python main.py --lang tr
+
+# Thread
+python main.py --lang en --thread
 ```
 
-### 7.2 Log Takibi
+### Monitoring
 
 ```bash
-# Logları izle
-tail -f /opt/reddit-x-bot/logs/bot.log
+# İstatistikler
+python main.py --stats
+
+# 24 saat kuralı kontrolü
+python main.py --check-24h
+
+# Zamanlanmış görevler
+python scheduler.py --list
 ```
+
+---
+
+## ⏰ Zamanlama Stratejisi
+
+### Hurricane Zamanlaması
+
+| Zaman (TR) | Aksiyon | Açıklama |
+|------------|---------|----------|
+| 07:00 | 🌀 Engage | Quote/Reply |
+| 09:00 | 🌀 Engage | Quote/Reply |
+| 11:00 | 🌀 Engage | Quote/Reply |
+| 12:00 | 📝 Tweet | Orijinal post |
+| 13:00 | 🌀 Engage | Quote/Reply |
+| 15:00 | 🌀 Engage | Quote/Reply |
+| 17:00 | 🌀 Engage | Quote/Reply |
+| 18:00 | 📝 Tweet | Orijinal post |
+| 19:00 | 🌀 Engage | Quote/Reply |
+| 21:00 | 🌀 Engage + Tweet | İngilizce |
+
+### 24 Saat Kontrolü
+
+- Her 4 saatte bir otomatik kontrol
+- 20+ saat sessizlik = uyarı
+- 23+ saat = acil aksiyon
+
+---
+
+## 🎯 Reddit Isınma Süreci
+
+Hurricane stratejisine göre:
+
+1. **1 Ay Manuel Karma Kasma**
+   - Spam motorlarına yakalanmamak için
+   - Gerçek yorumlar ve paylaşımlar
+   - Minimum 1000 karma hedefi
+
+2. **Isınma Modu**
+   ```bash
+   # .env'de
+   IS_WARMUP_MODE=true
+   ```
+
+3. **Sonra Otomasyon**
+   ```bash
+   IS_WARMUP_MODE=false
+   ```
 
 ---
 
@@ -193,7 +232,7 @@ tail -f /opt/reddit-x-bot/logs/bot.log
 
 ```python
 SUBREDDITS = [
-    # Girişimcilik
+    # Girişimcilik & SaaS (Yüksek pain point)
     "Entrepreneur",      # 4.8M
     "startups",          # 1.8M
     "SaaS",              # 341K
@@ -204,47 +243,61 @@ SUBREDDITS = [
     # Teknoloji & AI
     "programming",       # 6M
     "webdev",            # 2.1M
-    "artificial",        # 1.5M
     "ChatGPT",           # 5M
     "vibecoding",        # 35K
     
     # İş & Verimlilik
     "productivity",      # 4M
     "smallbusiness",     # 2.2M
-    "Business_Ideas",    # 359K
 ]
 ```
 
 ---
 
-## 🔄 Tweet Formatları
+## ⚙️ Environment Variables
 
-### Türkçe Format
+```bash
+# Hurricane Stratejisi
+QUOTE_MENTION_RATIO=0.9        # %90 engagement
+ORIGINAL_POST_RATIO=0.1        # %10 orijinal
+MAX_SILENCE_HOURS=23           # 24 saat kuralı
+DAILY_QUOTE_TARGET=10          # Günlük hedef
+DAILY_MENTION_TARGET=5
+
+# Tweet Ayarları
+USE_HASHTAGS=false             # Hashtag kullanma
+MAX_DAILY_TWEETS=8
+
+# Isınma Modu
+IS_WARMUP_MODE=true
+WARMUP_DAYS=30
+MIN_KARMA=1000
 ```
-🔥 Reddit'te trend: [KONU]
 
-[AI tarafından oluşturulan içerik]
+---
 
-#girişimcilik #teknoloji #trend
-```
+## 🐳 Docker Deployment
 
-### İngilizce Format
-```
-🔥 Trending on Reddit: [TOPIC]
+```bash
+# Build
+docker build -t reddit-x-automation .
 
-[AI generated content]
+# Run
+docker-compose up -d
 
-#startup #tech #trending
+# Logs
+docker-compose logs -f
 ```
 
 ---
 
 ## ⚠️ Önemli Notlar
 
-1. **Rate Limiting**: X API günde 50 tweet sınırı (Free tier)
-2. **Reddit ToS**: Aşırı scraping yapma, cache kullan
-3. **AI Maliyeti**: Claude Haiku daha ucuz, Sonnet daha kaliteli
-4. **Spam Önleme**: Aynı içeriği tekrar paylaşma
+1. **24 Saat Kuralı**: Sessizlik = negatif boost, kesinlikle takip et
+2. **Hashtag Kullanma**: Engagement düşürür (Hurricane notları)
+3. **Quote > Reply**: Quote tweet daha etkili trustscore için
+4. **Tartışma Yarat**: Dwell time artırır, algoritma sever
+5. **Isınma Süresi**: Reddit'te 1 ay manuel karma kas
 
 ---
 
@@ -252,17 +305,38 @@ SUBREDDITS = [
 
 | Sorun | Çözüm |
 |-------|-------|
-| X API 403 | App permissions kontrol et |
-| Reddit 429 | Rate limit, 60sn bekle |
-| Claude timeout | Retry logic ekle |
-| Tweet duplicate | Hash kontrolü ekle |
+| 24 saat uyarısı | Hemen `--engage` çalıştır |
+| Hedef hesap yok | `--add-target` ile ekle |
+| Quote çalışmıyor | Tweet ID'yi kontrol et |
+| API rate limit | Daily limit'leri düşür |
 
 ---
 
-## 📈 Gelecek Geliştirmeler
+## 📈 Metrikler ve Hedefler
 
+### Günlük Hedefler
+
+- [ ] 10 Quote tweet
+- [ ] 5 Reply
+- [ ] 2-3 Orijinal post
+- [ ] %0.5+ engagement rate
+- [ ] 24 saat kuralını koru
+
+### Haftalık Hedefler
+
+- [ ] 50+ toplam engagement
+- [ ] 5 yeni hedef hesap ekle
+- [ ] Engagement rate takibi
+
+---
+
+## 🔄 Gelecek Geliştirmeler
+
+- [x] Hurricane engagement modülü
+- [x] 24 saat kuralı kontrolü
+- [x] Duygusal tetikleyiciler
+- [x] Quote/Reply/Mention desteği
 - [ ] Analytics dashboard
-- [ ] A/B test için farklı formatlar
-- [ ] Engagement takibi
-- [ ] Otomatik hashtag önerisi
-- [ ] Thread desteği
+- [ ] A/B test
+- [ ] Otomatik hedef hesap keşfi
+- [ ] Engagement rate tracking
