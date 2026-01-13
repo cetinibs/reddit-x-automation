@@ -1,21 +1,21 @@
 """
-Tweet Generator - Claude AI ile tweet oluşturma
+Tweet Generator - OpenAI ile tweet oluşturma
 """
 import random
 from typing import Optional
 from loguru import logger
-import anthropic
+import openai
 
 from config import config
 from reddit_scraper import RedditPost
 
 
 class TweetGenerator:
-    """Claude AI kullanarak tweet oluşturan generator"""
+    """OpenAI kullanarak tweet oluşturan generator"""
     
     def __init__(self):
-        self.client = anthropic.Anthropic(api_key=config.anthropic.api_key)
-        self.model = config.anthropic.model
+        self.client = openai.OpenAI(api_key=config.openai.api_key)
+        self.model = config.openai.model
     
     def _get_system_prompt(self, language: str) -> str:
         """Sistem prompt'u oluştur"""
@@ -103,11 +103,14 @@ Create a viral English tweet with your own perspective on this topic."""
         try:
             logger.info(f"Generating {language.upper()} tweet for: {post.title[:50]}...")
             
-            message = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 max_tokens=300,
-                system=self._get_system_prompt(language),
                 messages=[
+                    {
+                        "role": "system",
+                        "content": self._get_system_prompt(language)
+                    },
                     {
                         "role": "user",
                         "content": self._get_user_prompt(post, language)
@@ -115,7 +118,7 @@ Create a viral English tweet with your own perspective on this topic."""
                 ]
             )
             
-            tweet_text = message.content[0].text.strip()
+            tweet_text = response.choices[0].message.content.strip()
             
             # Tweet uzunluk kontrolü
             if len(tweet_text) > 260:
@@ -208,7 +211,7 @@ FORMAT:
 Write each tweet on a new line, with blank lines between."""
 
         try:
-            message = self.client.messages.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 max_tokens=1500,
                 messages=[
@@ -216,8 +219,8 @@ Write each tweet on a new line, with blank lines between."""
                 ]
             )
             
-            response = message.content[0].text.strip()
-            tweets = [t.strip() for t in response.split("\n\n") if t.strip()]
+            text = response.choices[0].message.content.strip()
+            tweets = [t.strip() for t in text.split("\n\n") if t.strip()]
             
             logger.info(f"Generated thread with {len(tweets)} tweets")
             return tweets[:tweet_count]

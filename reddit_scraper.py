@@ -1,10 +1,10 @@
 """
 Reddit Scraper - Reddit'ten popüler postları çeker
-.json endpoint kullanarak API key gerektirmeden çalışır
+PRAW (Python Reddit API Wrapper) kullanarak resmi API ile çalışır
 """
 import json
 import hashlib
-import requests
+import praw
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
@@ -53,18 +53,21 @@ class RedditPost:
 
 
 class RedditScraper:
-    """Reddit .json API kullanarak post toplayan scraper"""
-    
-    BASE_URL = "https://www.reddit.com"
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    """Reddit PRAW API kullanarak post toplayan scraper"""
     
     def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": self.USER_AGENT
-        })
+        # PRAW Reddit instance oluştur
+        self.reddit = praw.Reddit(
+            client_id=config.reddit.client_id,
+            client_secret=config.reddit.client_secret,
+            user_agent=config.reddit.user_agent
+        )
         self.cache_file = CACHE_DIR / "reddit_cache.json"
         self.posted_file = CACHE_DIR / "posted_ids.json"
+        
+        # API credentials kontrolü
+        if not config.reddit.client_id or not config.reddit.client_secret:
+            logger.warning("Reddit API credentials not set! Please set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET")
     
     def _get_cache_key(self, subreddit: str, sort: str) -> str:
         """Cache key oluştur"""
@@ -138,39 +141,43 @@ class RedditScraper:
             logger.debug(f"Cache hit for r/{subreddit}")
             return [RedditPost(**p) for p in cache[cache_key]]
         
-        # Reddit'ten çek
-        url = f"{self.BASE_URL}/r/{subreddit}/{sort}.json"
-        params = {"limit": limit, "raw_json": 1}
-        
+        # Reddit'ten PRAW ile çek
         try:
             logger.info(f"Fetching r/{subreddit}/{sort}...")
-            response = self.session.get(url, params=params, timeout=10)
-            response.raise_for_status()
+            sub = self.reddit.subreddit(subreddit)
             
-            data = response.json()
+            # Sort tipine göre postları al
+            if sort == "hot":
+                submissions = sub.hot(limit=limit)
+            elif sort == "new":
+                submissions = sub.new(limit=limit)
+            elif sort == "top":
+                submissions = sub.top(limit=limit, time_filter="day")
+            elif sort == "rising":
+                submissions = sub.rising(limit=limit)
+            else:
+                submissions = sub.hot(limit=limit)
+            
             posts = []
-            
-            for child in data.get("data", {}).get("children", []):
-                post_data = child.get("data", {})
-                
+            for submission in submissions:
                 # Filtrele: minimum upvote
-                if post_data.get("score", 0) < config.reddit.min_upvotes:
+                if submission.score < config.reddit.min_upvotes:
                     continue
                 
                 # Stickied postları atla
-                if post_data.get("stickied", False):
+                if submission.stickied:
                     continue
                 
                 post = RedditPost(
-                    id=post_data.get("id", ""),
-                    title=post_data.get("title", ""),
-                    subreddit=post_data.get("subreddit", subreddit),
-                    score=post_data.get("score", 0),
-                    num_comments=post_data.get("num_comments", 0),
-                    url=post_data.get("url", ""),
-                    selftext=post_data.get("selftext", ""),
-                    created_utc=post_data.get("created_utc", 0),
-                    permalink=post_data.get("permalink", "")
+                    id=submission.id,
+                    title=submission.title,
+                    subreddit=submission.subreddit.display_name,
+                    score=submission.score,
+                    num_comments=submission.num_comments,
+                    url=submission.url,
+                    selftext=submission.selftext or "",
+                    created_utc=submission.created_utc,
+                    permalink=submission.permalink
                 )
                 posts.append(post)
             
@@ -182,7 +189,7 @@ class RedditScraper:
             logger.info(f"Fetched {len(posts)} posts from r/{subreddit}")
             return posts
             
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             logger.error(f"Error fetching r/{subreddit}: {e}")
             return []
     

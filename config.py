@@ -21,13 +21,18 @@ class XConfig(BaseModel):
     access_token_secret: str = os.getenv("X_ACCESS_TOKEN_SECRET", "")
     bearer_token: str = os.getenv("X_BEARER_TOKEN", "")
 
-class AnthropicConfig(BaseModel):
-    """Anthropic Claude API configuration"""
-    api_key: str = os.getenv("ANTHROPIC_API_KEY", "")
-    model: str = "claude-sonnet-4-20250514"  # veya claude-3-haiku için daha ucuz
+class OpenAIConfig(BaseModel):
+    """OpenAI API configuration"""
+    api_key: str = os.getenv("OPENAI_API_KEY", "")
+    model: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 class RedditConfig(BaseModel):
     """Reddit scraping configuration"""
+    # Reddit API credentials (for PRAW)
+    client_id: str = os.getenv("REDDIT_CLIENT_ID", "")
+    client_secret: str = os.getenv("REDDIT_CLIENT_SECRET", "")
+    user_agent: str = os.getenv("REDDIT_USER_AGENT", "RedditXBot/1.0 by u/YourUsername")
+    
     posts_limit: int = int(os.getenv("REDDIT_POSTS_LIMIT", "25"))
     min_upvotes: int = int(os.getenv("MIN_UPVOTES", "100"))
     cache_hours: int = int(os.getenv("CACHE_HOURS", "6"))
@@ -82,7 +87,7 @@ class ScheduleConfig(BaseModel):
 class Config(BaseModel):
     """Main configuration"""
     x: XConfig = XConfig()
-    anthropic: AnthropicConfig = AnthropicConfig()
+    openai: OpenAIConfig = OpenAIConfig()
     reddit: RedditConfig = RedditConfig()
     tweet: TweetConfig = TweetConfig()
     schedule: ScheduleConfig = ScheduleConfig()
